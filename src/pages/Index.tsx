@@ -9,7 +9,9 @@ import { TaskItem } from '@/components/TaskItem';
 import { ProcrastinationBot } from '@/components/ProcrastinationBot';
 import { ExcuseGenerator } from '@/components/ExcuseGenerator';
 import { ProcrastinationBingo } from '@/components/ProcrastinationBingo';
+import { TaskConfirmationDialog } from '@/components/TaskConfirmationDialog';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { playSound } from '@/utils/soundManager';
 
 interface Task {
   id: string;
@@ -21,13 +23,24 @@ interface Task {
   points: number;
   startTime?: Date;
   endTime?: Date;
-  estimatedDuration?: number; // in minutes
+  estimatedDuration?: number;
 }
 
 const Index = () => {
   const [tasks, setTasks] = useLocalStorage<Task[]>('todont-tasks', []);
   const [totalPoints, setTotalPoints] = useLocalStorage<number>('todont-points', 0);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    isOpen: boolean;
+    taskName: string;
+    duration: number;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    taskName: '',
+    duration: 0,
+    onConfirm: () => {}
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -84,6 +97,15 @@ const Index = () => {
   const addTask = (taskText: string, duration: number) => {
     if (!taskText.trim()) return;
     
+    setConfirmationDialog({
+      isOpen: true,
+      taskName: taskText,
+      duration: duration,
+      onConfirm: () => confirmAddTask(taskText, duration)
+    });
+  };
+
+  const confirmAddTask = (taskText: string, duration: number) => {
     const now = new Date();
     const endTime = new Date(now.getTime() + duration * 60 * 1000);
     
@@ -108,21 +130,33 @@ const Index = () => {
       return newTasks;
     });
     
+    // Play sound with 2 second delay
+    setTimeout(() => {
+      playSound('taskAdded');
+    }, 2000);
+    
     toast({
       title: "🎯 New Avoidance Mission!",
       description: `Great! Now you can officially avoid: "${taskText}" for ${duration} minutes`,
       duration: 2000,
     });
+
+    setConfirmationDialog(prev => ({ ...prev, isOpen: false }));
   };
 
   const toggleTask = (id: string) => {
     setTasks(prev => prev.map(task => {
       if (task.id === id) {
         if (task.isActive) {
-          const pointsLost = Math.floor(task.points * 0.3); // Less harsh penalty
+          const pointsLost = Math.floor(task.points * 0.3);
           const pointsGained = Math.max(0, task.points - pointsLost);
           
           setTotalPoints(prev => prev + pointsGained);
+          
+          // Play sound with 2 second delay
+          setTimeout(() => {
+            playSound('taskDone');
+          }, 2000);
           
           toast({
             title: "😱 Productivity Alert!",
@@ -367,6 +401,14 @@ const Index = () => {
 
       {/* Floating Bot */}
       <ProcrastinationBot tasks={activeTasks} />
+
+      {/* Task Confirmation Dialog */}
+      <TaskConfirmationDialog
+        isOpen={confirmationDialog.isOpen}
+        taskName={confirmationDialog.taskName}
+        onConfirm={confirmationDialog.onConfirm}
+        onCancel={() => setConfirmationDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

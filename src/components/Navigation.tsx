@@ -1,7 +1,7 @@
-import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Home, User, ShoppingBag, History } from 'lucide-react';
+import { Home, User, Trophy, History } from 'lucide-react';
 
 interface NavigationProps {
   currentPage: string;
@@ -37,28 +37,16 @@ export const Navigation = ({ currentPage, onPageChange }: NavigationProps) => {
           Profile
         </Button>
         <Button
-          onClick={() => onPageChange('shop')}
-          variant={currentPage === 'shop' ? 'default' : 'outline'}
+          onClick={() => onPageChange('leaderboard')}
+          variant={currentPage === 'leaderboard' ? 'default' : 'outline'}
           className={`flex items-center gap-2 ${
-            currentPage === 'shop' 
+            currentPage === 'leaderboard' 
               ? 'bg-orange-500 hover:bg-orange-600' 
               : 'border-orange-300 text-orange-700 hover:bg-orange-50'
           }`}
         >
-          <ShoppingBag className="w-4 h-4" />
-          Shop
-        </Button>
-        <Button
-          onClick={() => onPageChange('history')}
-          variant={currentPage === 'history' ? 'default' : 'outline'}
-          className={`flex items-center gap-2 ${
-            currentPage === 'history' 
-              ? 'bg-orange-500 hover:bg-orange-600' 
-              : 'border-orange-300 text-orange-700 hover:bg-orange-50'
-          }`}
-        >
-          <History className="w-4 h-4" />
-          History
+          <Trophy className="w-4 h-4" />
+          Leaderboard
         </Button>
       </div>
     </Card>
