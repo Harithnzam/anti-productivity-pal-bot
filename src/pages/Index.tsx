@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -133,90 +132,91 @@ const Index = () => {
   }, [currentPoints, setTotalPoints]);
 
   const renderWelcomePage = () => (
-    <Card className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-300 shadow-xl">
-      <CardContent className="p-12 text-center">
-        <div className="text-8xl mb-6 animate-bounce">🎯</div>
-        <h3 className="text-3xl font-bold text-orange-800 mb-4">
+    <Card className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-300 shadow-xl mb-8">
+      <CardContent className="p-8 text-center">
+        <div className="text-6xl mb-4 animate-bounce">🎯</div>
+        <h3 className="text-2xl font-bold text-orange-800 mb-3">
           Welcome to the Anti-Productivity Zone!
         </h3>
-        <p className="text-orange-700 text-xl mb-6 max-w-2xl mx-auto">
+        <p className="text-orange-700 text-lg mb-4 max-w-2xl mx-auto">
           Add your first task above to start your journey of productive procrastination. 
           Watch as our bot cheers you on for successfully avoiding your responsibilities!
         </p>
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mt-8">
-          <div className="bg-white/80 p-6 rounded-xl shadow-lg">
-            <div className="text-4xl mb-3">🏆</div>
-            <h4 className="font-semibold text-orange-800 mb-2">Earn Points</h4>
-            <p className="text-orange-600 text-sm">Get rewarded for every minute you successfully avoid your tasks!</p>
-          </div>
-          <div className="bg-white/80 p-6 rounded-xl shadow-lg">
-            <div className="text-4xl mb-3">🎲</div>
-            <h4 className="font-semibold text-orange-800 mb-2">Play Bingo</h4>
-            <p className="text-orange-600 text-sm">Complete lines on your procrastination bingo card for extra celebration!</p>
-          </div>
-          <div className="bg-white/80 p-6 rounded-xl shadow-lg">
-            <div className="text-4xl mb-3">🤖</div>
-            <h4 className="font-semibold text-orange-800 mb-2">Get Coached</h4>
-            <p className="text-orange-600 text-sm">Our AI bot will provide motivational messages for your avoidance journey!</p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
 
   const renderHomePage = () => (
-    <div className="grid lg:grid-cols-2 gap-8">
-      <div className="space-y-6">
-        <ProcrastinationBingo tasks={activeTasks} />
-        <ExcuseGenerator />
-      </div>
+    <div className="space-y-8">
+      {/* Welcome message for new users */}
+      {tasks.length === 0 && renderWelcomePage()}
+      
+      {/* Main content grid */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <ProcrastinationBingo tasks={activeTasks} />
+          <ExcuseGenerator />
+        </div>
 
-      <div className="space-y-6">
-        {activeTasks.length > 0 && (
-          <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-2 border-red-200">
-            <CardHeader>
-              <CardTitle className="text-red-700 flex items-center gap-3 text-xl">
-                <div className="p-2 bg-red-100 rounded-full">
-                  <Clock className="w-6 h-6 text-red-600" />
-                </div>
-                Currently Avoiding ({activeTasks.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {activeTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onToggle={toggleTask}
-                  onDelete={deleteTask}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        )}
+        <div className="space-y-6">
+          {activeTasks.length > 0 && (
+            <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-2 border-red-200">
+              <CardHeader>
+                <CardTitle className="text-red-700 flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-red-100 rounded-full">
+                    <Clock className="w-6 h-6 text-red-600" />
+                  </div>
+                  Currently Avoiding ({activeTasks.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {activeTasks.map((task) => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={toggleTask}
+                    onDelete={deleteTask}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
-        {completedTasks.length > 0 && (
-          <Card className="bg-gray-50/95 backdrop-blur-sm shadow-xl border-2 border-gray-300">
-            <CardHeader>
-              <CardTitle className="text-gray-600 flex items-center gap-3 text-xl">
-                <div className="p-2 bg-gray-200 rounded-full">
-                  <TrendingUp className="w-6 h-6 text-gray-500" />
-                </div>
-                Productivity Incidents ({completedTasks.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {completedTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onToggle={toggleTask}
-                  onDelete={deleteTask}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        )}
+          {completedTasks.length > 0 && (
+            <Card className="bg-gray-50/95 backdrop-blur-sm shadow-xl border-2 border-gray-300">
+              <CardHeader>
+                <CardTitle className="text-gray-600 flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-gray-200 rounded-full">
+                    <TrendingUp className="w-6 h-6 text-gray-500" />
+                  </div>
+                  Productivity Incidents ({completedTasks.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {completedTasks.map((task) => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={toggleTask}
+                    onDelete={deleteTask}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Placeholder for empty task lists */}
+          {activeTasks.length === 0 && completedTasks.length === 0 && (
+            <Card className="bg-white/90 backdrop-blur-sm shadow-xl border-2 border-gray-200">
+              <CardContent className="p-8 text-center">
+                <div className="text-6xl mb-4 opacity-50">⏰</div>
+                <p className="text-gray-600 text-lg">
+                  No tasks to avoid yet. Add some tasks above to start procrastinating!
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -300,11 +300,7 @@ const Index = () => {
         </Card>
 
         {/* Page Content */}
-        {currentPage === 'home' && (
-          <>
-            {tasks.length === 0 ? renderWelcomePage() : renderHomePage()}
-          </>
-        )}
+        {currentPage === 'home' && renderHomePage()}
         {currentPage === 'profile' && <Profile tasks={tasks} totalPoints={totalPoints} />}
         {currentPage === 'shop' && <Shop points={totalPoints} onPurchase={handlePurchase} />}
         {currentPage === 'history' && <History tasks={tasks} />}
