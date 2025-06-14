@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,15 +80,18 @@ const Index = () => {
     });
   };
 
-  const addTask = () => {
-    if (!newTask.trim()) return;
+  const addTask = (taskText?: string, duration?: number) => {
+    const task = taskText || newTask;
+    const taskDuration = duration || newTaskDuration;
+    
+    if (!task.trim()) return;
     
     const now = new Date();
-    const endTime = new Date(now.getTime() + newTaskDuration * 60 * 1000);
+    const endTime = new Date(now.getTime() + taskDuration * 60 * 1000);
     
-    const task: Task = {
+    const newTaskObj: Task = {
       id: Date.now().toString(),
-      text: newTask,
+      text: task,
       createdAt: now,
       lastAvoidedAt: now,
       totalAvoidanceTime: 0,
@@ -97,16 +99,19 @@ const Index = () => {
       points: 0,
       startTime: now,
       endTime: endTime,
-      estimatedDuration: newTaskDuration
+      estimatedDuration: taskDuration
     };
     
-    setTasks(prev => [...prev, task]);
-    setNewTask('');
-    setNewTaskDuration(30);
+    setTasks(prev => [...prev, newTaskObj]);
+    
+    if (!taskText) {
+      setNewTask('');
+      setNewTaskDuration(30);
+    }
     
     toast({
       title: "🎯 New Avoidance Mission!",
-      description: `Great! Now you can officially avoid: "${newTask}" for ${newTaskDuration} minutes`,
+      description: `Great! Now you can officially avoid: "${task}" for ${taskDuration} minutes`,
       duration: 2000,
     });
   };
@@ -159,13 +164,13 @@ const Index = () => {
   const currentActivePoints = activeTasks.reduce((sum, task) => sum + task.points, 0);
 
   const renderWelcomePage = () => (
-    <Card className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-300 shadow-xl mb-6">
-      <CardContent className="p-6 text-center">
-        <div className="text-4xl mb-3 animate-bounce">🎯</div>
-        <h3 className="text-xl font-bold text-orange-800 mb-2">
+    <Card className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-300 shadow-xl mb-4">
+      <CardContent className="p-4 text-center">
+        <div className="text-3xl mb-2 animate-bounce">🎯</div>
+        <h3 className="text-lg font-bold text-orange-800 mb-1">
           Welcome to the Anti-Productivity Zone!
         </h3>
-        <p className="text-orange-700 mb-3 max-w-xl mx-auto">
+        <p className="text-orange-700 text-sm max-w-xl mx-auto">
           Add your first task above to start your journey of productive procrastination!
         </p>
       </CardContent>
@@ -177,15 +182,17 @@ const Index = () => {
       {tasks.length === 0 && renderWelcomePage()}
       
       <div className="grid lg:grid-cols-2 gap-6">
+        {/* Left Column */}
         <div className="space-y-4">
-          <ProcrastinationBingo tasks={activeTasks} />
+          <ProcrastinationBingo tasks={activeTasks} onAddTask={addTask} />
           <ExcuseGenerator />
         </div>
 
+        {/* Right Column */}
         <div className="space-y-4">
           {activeTasks.length > 0 && (
             <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-2 border-red-200">
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-red-700 flex items-center gap-3 text-lg">
                   <div className="p-2 bg-red-100 rounded-full">
                     <Clock className="w-5 h-5 text-red-600" />
@@ -193,7 +200,7 @@ const Index = () => {
                   Currently Avoiding ({activeTasks.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-96 overflow-y-auto">
                 {activeTasks.map((task) => (
                   <TaskItem
                     key={task.id}
@@ -208,7 +215,7 @@ const Index = () => {
 
           {completedTasks.length > 0 && (
             <Card className="bg-gray-50/95 backdrop-blur-sm shadow-xl border-2 border-gray-300">
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-gray-600 flex items-center gap-3 text-lg">
                   <div className="p-2 bg-gray-200 rounded-full">
                     <TrendingUp className="w-5 h-5 text-gray-500" />
@@ -216,8 +223,8 @@ const Index = () => {
                   Productivity Incidents ({completedTasks.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {completedTasks.map((task) => (
+              <CardContent className="space-y-3 max-h-64 overflow-y-auto">
+                {completedTasks.slice(0, 3).map((task) => (
                   <TaskItem
                     key={task.id}
                     task={task}
@@ -225,6 +232,11 @@ const Index = () => {
                     onDelete={deleteTask}
                   />
                 ))}
+                {completedTasks.length > 3 && (
+                  <div className="text-center text-sm text-gray-500 pt-2">
+                    +{completedTasks.length - 3} more completed tasks
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -305,7 +317,7 @@ const Index = () => {
 
         {/* Add Task Section */}
         <Card className="border-2 border-dashed border-orange-300 bg-white/90 backdrop-blur-sm shadow-xl">
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-orange-800 flex items-center gap-3">
               <div className="p-2 bg-orange-100 rounded-full">
                 <Zap className="w-5 h-5 text-orange-600" />
@@ -337,7 +349,7 @@ const Index = () => {
                 </div>
               </div>
               <Button 
-                onClick={addTask}
+                onClick={() => addTask()}
                 className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg"
               >
                 Add to Avoid

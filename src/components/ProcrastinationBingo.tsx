@@ -1,9 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Trophy, Sparkles, RotateCcw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Calendar, Trophy, Sparkles, RotateCcw, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface BingoCard {
@@ -13,6 +14,7 @@ interface BingoCard {
   date: number;
   month: number;
   year: number;
+  hasCustomTask: boolean;
 }
 
 interface Task {
@@ -23,38 +25,51 @@ interface Task {
 
 interface ProcrastinationBingoProps {
   tasks: Task[];
+  onAddTask: (taskText: string, duration: number) => void;
 }
 
-export const ProcrastinationBingo = ({ tasks }: ProcrastinationBingoProps) => {
+export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoProps) => {
   const [bingoCard, setBingoCard] = useState<BingoCard[]>([]);
   const [completedLines, setCompletedLines] = useState<number[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
+  const [selectedCell, setSelectedCell] = useState<string | null>(null);
+  const [newTaskText, setNewTaskText] = useState('');
+  const [taskDuration, setTaskDuration] = useState(30);
 
   useEffect(() => {
     generateBingoCard();
   }, [tasks, currentWeekStart]);
 
   const generateBingoCard = () => {
-    const activeTasks = tasks.filter(task => task.isActive);
-    if (activeTasks.length === 0) return;
-
     const newCard: BingoCard[] = [];
     const startDate = new Date(currentWeekStart);
+    const taskTexts = [
+      'Exercise', 'Clean room', 'Study', 'Call family', 'Do laundry',
+      'Meal prep', 'Read book', 'Organize files', 'Pay bills', 'Water plants',
+      'Write emails', 'Update resume', 'Plan week', 'Declutter', 'Learn skill',
+      'Cook dinner', 'Take walk', 'Meditate', 'Social media', 'Watch series',
+      'Play games', 'Listen music', 'Browse web', 'Chat friends', 'Take nap'
+    ];
     
     // Generate 25 consecutive days starting from the current week
     for (let i = 0; i < 25; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
       
-      const randomTask = activeTasks[Math.floor(Math.random() * activeTasks.length)];
+      // Use different tasks or random selection
+      const taskText = tasks.length > 0 
+        ? tasks[i % tasks.length]?.text || taskTexts[i % taskTexts.length]
+        : taskTexts[i % taskTexts.length];
+      
       newCard.push({
         id: `${i}`,
-        task: randomTask.text,
-        avoided: Math.random() > 0.8, // Some randomly avoided for demo
+        task: taskText,
+        avoided: Math.random() > 0.9, // Less randomly avoided
         date: currentDate.getDate(),
         month: currentDate.getMonth() + 1,
-        year: currentDate.getFullYear()
+        year: currentDate.getFullYear(),
+        hasCustomTask: false
       });
     }
     setBingoCard(newCard);
@@ -67,6 +82,39 @@ export const ProcrastinationBingo = ({ tasks }: ProcrastinationBingoProps) => {
     );
     setBingoCard(newCard);
     checkForBingo(newCard);
+  };
+
+  const handleCellClick = (id: string) => {
+    setSelectedCell(id);
+    const cell = bingoCard.find(c => c.id === id);
+    if (cell) {
+      setNewTaskText(cell.task);
+    }
+  };
+
+  const handleAddCustomTask = () => {
+    if (!selectedCell || !newTaskText.trim()) return;
+    
+    // Add to main task list
+    onAddTask(newTaskText, taskDuration);
+    
+    // Update bingo card
+    const newCard = bingoCard.map(cell => 
+      cell.id === selectedCell 
+        ? { ...cell, task: newTaskText, hasCustomTask: true }
+        : cell
+    );
+    setBingoCard(newCard);
+    
+    setSelectedCell(null);
+    setNewTaskText('');
+    setTaskDuration(30);
+    
+    toast({
+      title: "📝 Task Added!",
+      description: `"${newTaskText}" added to both bingo and main list!`,
+      duration: 3000,
+    });
   };
 
   const checkForBingo = (card: BingoCard[]) => {
@@ -154,24 +202,19 @@ export const ProcrastinationBingo = ({ tasks }: ProcrastinationBingoProps) => {
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {bingoCard.length === 0 ? (
-          <div className="text-center py-8 text-emerald-700">
-            <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>Add some tasks to generate your Procrastination Calendar!</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-5 gap-2 max-w-md mx-auto">
-              {bingoCard.map((cell, index) => (
+        <div className="grid grid-cols-5 gap-2 max-w-md mx-auto">
+          {bingoCard.map((cell, index) => (
+            <Dialog key={cell.id}>
+              <DialogTrigger asChild>
                 <button
-                  key={cell.id}
-                  onClick={() => toggleAvoidance(cell.id)}
+                  onClick={() => handleCellClick(cell.id)}
                   className={`
-                    aspect-square p-2 rounded-lg text-xs font-medium transition-all duration-200 border-2
+                    aspect-square p-2 rounded-lg text-xs font-medium transition-all duration-200 border-2 relative
                     ${cell.avoided 
                       ? 'bg-emerald-500 text-white border-emerald-600 shadow-lg transform scale-105' 
                       : 'bg-white text-emerald-800 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-400'
                     }
+                    ${cell.hasCustomTask ? 'ring-2 ring-blue-400' : ''}
                   `}
                   title={cell.task}
                 >
@@ -184,27 +227,70 @@ export const ProcrastinationBingo = ({ tasks }: ProcrastinationBingoProps) => {
                   {cell.avoided && (
                     <div className="text-lg mt-1">✓</div>
                   )}
+                  {cell.hasCustomTask && (
+                    <div className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></div>
+                  )}
                 </button>
-              ))}
-            </div>
-            
-            <div className="flex justify-center gap-2 pt-2">
-              <Button
-                onClick={generateBingoCard}
-                variant="outline"
-                size="sm"
-                className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                New Card
-              </Button>
-            </div>
-            
-            <div className="text-center text-xs text-emerald-600">
-              Complete a full row, column, or diagonal to get BINGO! 🎯
-            </div>
-          </>
-        )}
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Customize Task for {cell.month}/{cell.date}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Task Description</label>
+                    <Input
+                      value={newTaskText}
+                      onChange={(e) => setNewTaskText(e.target.value)}
+                      placeholder="Enter task to procrastinate on..."
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Duration (minutes)</label>
+                    <Input
+                      type="number"
+                      value={taskDuration}
+                      onChange={(e) => setTaskDuration(Number(e.target.value))}
+                      min="5"
+                      max="480"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleAddCustomTask}
+                      className="flex-1"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Task
+                    </Button>
+                    <Button 
+                      onClick={() => toggleAvoidance(cell.id)}
+                      variant={cell.avoided ? "destructive" : "secondary"}
+                    >
+                      {cell.avoided ? 'Mark Undone' : 'Mark Avoided'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          ))}
+        </div>
+        
+        <div className="flex justify-center gap-2 pt-2">
+          <Button
+            onClick={generateBingoCard}
+            variant="outline"
+            size="sm"
+            className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            New Card
+          </Button>
+        </div>
+        
+        <div className="text-center text-xs text-emerald-600">
+          Click any box to customize task • Complete a row, column, or diagonal for BINGO! 🎯
+        </div>
       </CardContent>
     </Card>
   );
