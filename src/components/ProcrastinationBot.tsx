@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { X, MessageCircle } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -27,25 +28,22 @@ const encouragingMessages = [
   "🌈 Procrastination: It's not laziness, it's selective action!"
 ];
 
-const milestoneMessages = [
-  "🥇 30 minutes of pure avoidance! You're a natural!",
-  "🏅 1 hour of successful procrastination! Legend status achieved!",
-  "👑 2 hours strong! You could teach a masterclass in avoidance!",
-  "🎊 3+ hours! You've transcended ordinary procrastination!",
-];
-
 export const ProcrastinationBot = ({ tasks }: ProcrastinationBotProps) => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [botMood, setBotMood] = useState('😴');
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      generateMessage();
-    }, 15000); // New message every 15 seconds
+      if (isExpanded) {
+        generateMessage();
+      }
+    }, 20000); // New message every 20 seconds when expanded
 
     generateMessage(); // Initial message
     return () => clearInterval(interval);
-  }, [tasks]);
+  }, [tasks, isExpanded]);
 
   const generateMessage = () => {
     if (tasks.length === 0) {
@@ -79,29 +77,75 @@ export const ProcrastinationBot = ({ tasks }: ProcrastinationBotProps) => {
     }
   };
 
+  if (!isVisible) return null;
+
   return (
-    <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-200">
-      <CardHeader className="pb-2">
-        <div className="flex items-center gap-2">
-          <div className="text-2xl">{botMood}</div>
-          <div className="text-lg font-semibold text-purple-800">
-            Your Procrastination Coach
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="bg-white/80 rounded-lg p-4 mb-3">
-          <p className="text-gray-800 leading-relaxed">{currentMessage}</p>
-        </div>
-        <Button
-          onClick={generateMessage}
-          variant="outline"
-          size="sm"
-          className="border-purple-300 text-purple-700 hover:bg-purple-50"
+    <div className="fixed bottom-4 left-4 z-50">
+      {/* Collapsed Bot Icon */}
+      {!isExpanded && (
+        <button
+          onClick={() => setIsExpanded(true)}
+          className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 animate-pulse"
         >
-          Get New Encouragement
-        </Button>
-      </CardContent>
-    </Card>
+          <div className="flex items-center gap-2">
+            <div className="text-2xl">{botMood}</div>
+            <MessageCircle className="w-5 h-5" />
+          </div>
+        </button>
+      )}
+
+      {/* Expanded Bot */}
+      {isExpanded && (
+        <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-200 shadow-xl max-w-xs animate-fade-in">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="text-2xl">{botMood}</div>
+              <div className="text-sm font-semibold text-purple-800">
+                Your Coach
+              </div>
+            </div>
+            <Button
+              onClick={() => setIsExpanded(false)}
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 hover:bg-purple-200"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="bg-white/80 rounded-lg p-3">
+              <p className="text-gray-800 text-sm leading-relaxed">{currentMessage}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  generateMessage();
+                  // Add a little bounce animation
+                  const element = document.querySelector('.animate-bounce');
+                  if (element) {
+                    element.classList.add('animate-bounce');
+                    setTimeout(() => element.classList.remove('animate-bounce'), 1000);
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="border-purple-300 text-purple-700 hover:bg-purple-50 text-xs flex-1"
+              >
+                New Pep Talk
+              </Button>
+              <Button
+                onClick={() => setIsVisible(false)}
+                variant="ghost"
+                size="sm"
+                className="text-gray-500 hover:text-gray-700 text-xs"
+              >
+                Hide
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };

@@ -1,15 +1,15 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Clock, Trophy, Zap, Coffee, Gamepad2 } from 'lucide-react';
+import { Clock, Trophy, Zap, Coffee, Gamepad2, Target, TrendingUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { TaskItem } from '@/components/TaskItem';
 import { ProcrastinationBot } from '@/components/ProcrastinationBot';
 import { ExcuseGenerator } from '@/components/ExcuseGenerator';
+import { ProcrastinationBingo } from '@/components/ProcrastinationBingo';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 interface Task {
@@ -127,48 +127,73 @@ const Index = () => {
   }, [currentPoints, setTotalPoints]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-yellow-50 to-red-100 p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-5xl font-bold text-orange-800 tracking-tight">
+    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-yellow-50 to-red-100 p-4 pb-20">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header with improved stats */}
+        <div className="text-center space-y-4">
+          <h1 className="text-6xl font-bold text-orange-800 tracking-tight bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
             To-Don't List
           </h1>
-          <p className="text-lg text-orange-700 font-medium">
+          <p className="text-xl text-orange-700 font-medium">
             The Art of Productive Procrastination
           </p>
-          <div className="flex justify-center items-center gap-4 mt-4">
-            <Badge variant="secondary" className="text-lg px-4 py-2 bg-yellow-200 text-yellow-800">
-              <Trophy className="w-5 h-5 mr-2" />
-              {totalPoints} Procrastination Points
-            </Badge>
-            <Badge variant="outline" className="text-lg px-4 py-2">
-              <Coffee className="w-5 h-5 mr-2" />
-              {activeTasks.length} Active Avoidances
-            </Badge>
+          
+          {/* Enhanced Stats Row */}
+          <div className="flex flex-wrap justify-center items-center gap-4 mt-6">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-yellow-200">
+              <div className="flex items-center gap-3">
+                <Trophy className="w-8 h-8 text-yellow-600" />
+                <div>
+                  <div className="text-2xl font-bold text-yellow-800">{totalPoints}</div>
+                  <div className="text-sm text-yellow-600">Procrastination Points</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-orange-200">
+              <div className="flex items-center gap-3">
+                <Target className="w-8 h-8 text-orange-600" />
+                <div>
+                  <div className="text-2xl font-bold text-orange-800">{activeTasks.length}</div>
+                  <div className="text-sm text-orange-600">Active Avoidances</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-red-200">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="w-8 h-8 text-red-600" />
+                <div>
+                  <div className="text-2xl font-bold text-red-800">{completedTasks.length}</div>
+                  <div className="text-sm text-red-600">Productivity Incidents</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Add New Task */}
-        <Card className="border-2 border-dashed border-orange-300 bg-white/80 backdrop-blur-sm">
+        {/* Add New Task - Enhanced */}
+        <Card className="border-2 border-dashed border-orange-300 bg-white/90 backdrop-blur-sm shadow-xl">
           <CardHeader>
-            <CardTitle className="text-orange-800 flex items-center gap-2">
-              <Zap className="w-5 h-5" />
+            <CardTitle className="text-orange-800 flex items-center gap-3 text-xl">
+              <div className="p-2 bg-orange-100 rounded-full">
+                <Zap className="w-6 h-6 text-orange-600" />
+              </div>
               What are you avoiding today?
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Input
                 placeholder="e.g., Doing laundry, Calling mom, Exercising..."
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && addTask()}
-                className="flex-1 text-lg"
+                className="flex-1 text-lg h-12 border-2 border-orange-200 focus:border-orange-400"
               />
               <Button 
                 onClick={addTask}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6"
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 h-12 shadow-lg"
               >
                 Add to Avoid
               </Button>
@@ -176,74 +201,105 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* Procrastination Bot */}
-        <ProcrastinationBot tasks={activeTasks} />
+        {/* Two Column Layout for Main Content */}
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Procrastination Bingo */}
+            <ProcrastinationBingo tasks={activeTasks} />
+            
+            {/* Excuse Generator */}
+            <ExcuseGenerator />
+          </div>
 
-        {/* Active Tasks */}
-        {activeTasks.length > 0 && (
-          <Card className="bg-white/90 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-red-700 flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                Currently Avoiding ({activeTasks.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {activeTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onToggle={toggleTask}
-                  onDelete={deleteTask}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        )}
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Active Tasks */}
+            {activeTasks.length > 0 && (
+              <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-2 border-red-200">
+                <CardHeader>
+                  <CardTitle className="text-red-700 flex items-center gap-3 text-xl">
+                    <div className="p-2 bg-red-100 rounded-full">
+                      <Clock className="w-6 h-6 text-red-600" />
+                    </div>
+                    Currently Avoiding ({activeTasks.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {activeTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onToggle={toggleTask}
+                      onDelete={deleteTask}
+                    />
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Excuse Generator */}
-        <ExcuseGenerator />
+            {/* Completed Tasks */}
+            {completedTasks.length > 0 && (
+              <Card className="bg-gray-50/95 backdrop-blur-sm shadow-xl border-2 border-gray-300">
+                <CardHeader>
+                  <CardTitle className="text-gray-600 flex items-center gap-3 text-xl">
+                    <div className="p-2 bg-gray-200 rounded-full">
+                      <Gamepad2 className="w-6 h-6 text-gray-500" />
+                    </div>
+                    Productivity Incidents ({completedTasks.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {completedTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onToggle={toggleTask}
+                      onDelete={deleteTask}
+                    />
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
 
-        {/* Completed Tasks */}
-        {completedTasks.length > 0 && (
-          <Card className="bg-gray-50/90 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-600 flex items-center gap-2">
-                <Gamepad2 className="w-5 h-5" />
-                Productivity Incidents ({completedTasks.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {completedTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onToggle={toggleTask}
-                  onDelete={deleteTask}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Getting Started */}
+        {/* Getting Started - Enhanced */}
         {tasks.length === 0 && (
-          <Card className="bg-gradient-to-r from-yellow-100 to-orange-100 border-yellow-300">
-            <CardContent className="p-8 text-center">
-              <div className="text-6xl mb-4">🎯</div>
-              <h3 className="text-2xl font-bold text-orange-800 mb-2">
+          <Card className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-300 shadow-xl">
+            <CardContent className="p-12 text-center">
+              <div className="text-8xl mb-6 animate-bounce">🎯</div>
+              <h3 className="text-3xl font-bold text-orange-800 mb-4">
                 Welcome to the Anti-Productivity Zone!
               </h3>
-              <p className="text-orange-700 text-lg mb-4">
-                Add your first task above to start your journey of productive procrastination.
+              <p className="text-orange-700 text-xl mb-6 max-w-2xl mx-auto">
+                Add your first task above to start your journey of productive procrastination. 
+                Watch as our bot cheers you on for successfully avoiding your responsibilities!
               </p>
-              <p className="text-orange-600">
-                Remember: The goal is to NOT do these things. Points are awarded for successful avoidance!
-              </p>
+              <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mt-8">
+                <div className="bg-white/80 p-6 rounded-xl shadow-lg">
+                  <div className="text-4xl mb-3">🏆</div>
+                  <h4 className="font-semibold text-orange-800 mb-2">Earn Points</h4>
+                  <p className="text-orange-600 text-sm">Get rewarded for every minute you successfully avoid your tasks!</p>
+                </div>
+                <div className="bg-white/80 p-6 rounded-xl shadow-lg">
+                  <div className="text-4xl mb-3">🎲</div>
+                  <h4 className="font-semibold text-orange-800 mb-2">Play Bingo</h4>
+                  <p className="text-orange-600 text-sm">Complete lines on your procrastination bingo card for extra celebration!</p>
+                </div>
+                <div className="bg-white/80 p-6 rounded-xl shadow-lg">
+                  <div className="text-4xl mb-3">🤖</div>
+                  <h4 className="font-semibold text-orange-800 mb-2">Get Coached</h4>
+                  <p className="text-orange-600 text-sm">Our AI bot will provide motivational messages for your avoidance journey!</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
       </div>
+
+      {/* Floating Bot */}
+      <ProcrastinationBot tasks={activeTasks} />
     </div>
   );
 };
