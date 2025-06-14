@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, Trophy, Coffee, Gamepad2, Music } from 'lucide-react';
+import { ShoppingBag, Trophy, Coffee, Gamepad2, Music, Star } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ShopItem {
@@ -17,7 +17,7 @@ interface ShopItem {
 
 interface ShopProps {
   points: number;
-  onPurchase: (cost: number) => void;
+  onPurchase: (cost: number) => boolean;
 }
 
 const shopItems: ShopItem[] = [
@@ -58,8 +58,16 @@ const shopItems: ShopItem[] = [
     name: 'Ultimate Procrastinator Badge',
     description: 'Show off your avoidance mastery',
     cost: 500,
-    icon: Trophy,
+    icon: Star,
     category: 'rewards'
+  },
+  {
+    id: '6',
+    name: 'Social Media Deep Dive',
+    description: 'Spend 2 hours scrolling guilt-free',
+    cost: 75,
+    icon: Trophy,
+    category: 'excuses'
   }
 ];
 
@@ -67,8 +75,9 @@ export const Shop = ({ points, onPurchase }: ShopProps) => {
   const [purchasedItems, setPurchasedItems] = useState<string[]>([]);
 
   const handlePurchase = (item: ShopItem) => {
-    if (points >= item.cost) {
-      onPurchase(item.cost);
+    const success = onPurchase(item.cost);
+    
+    if (success) {
       setPurchasedItems(prev => [...prev, item.id]);
       toast({
         title: "🛒 Purchase Successful!",
@@ -81,6 +90,15 @@ export const Shop = ({ points, onPurchase }: ShopProps) => {
         description: `You need ${item.cost - points} more points to buy this item.`,
         variant: "destructive",
       });
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'rewards': return 'bg-green-100 text-green-800';
+      case 'excuses': return 'bg-yellow-100 text-yellow-800';
+      case 'boosts': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -105,29 +123,29 @@ export const Shop = ({ points, onPurchase }: ShopProps) => {
           const IconComponent = item.icon;
 
           return (
-            <Card key={item.id} className={`${
+            <Card key={item.id} className={`transition-all duration-300 ${
               isPurchased 
-                ? 'bg-green-50 border-green-300' 
+                ? 'bg-green-50 border-green-300 shadow-md' 
                 : canAfford 
-                  ? 'bg-white border-orange-200 hover:shadow-lg transition-shadow' 
-                  : 'bg-gray-50 border-gray-300'
+                  ? 'bg-white border-orange-200 hover:shadow-xl hover:scale-105 cursor-pointer' 
+                  : 'bg-gray-50 border-gray-300 opacity-75'
             }`}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className={`p-2 rounded-full ${
+                  <div className={`p-3 rounded-full ${
                     isPurchased ? 'bg-green-200' : 'bg-orange-100'
                   }`}>
                     <IconComponent className={`w-6 h-6 ${
                       isPurchased ? 'text-green-600' : 'text-orange-600'
                     }`} />
                   </div>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge className={getCategoryColor(item.category)}>
                     {item.category}
                   </Badge>
                 </div>
                 
                 <h3 className="font-semibold text-lg mb-2">{item.name}</h3>
-                <p className="text-gray-600 text-sm mb-4">{item.description}</p>
+                <p className="text-gray-600 text-sm mb-4 min-h-[40px]">{item.description}</p>
                 
                 <div className="flex items-center justify-between">
                   <div className="text-lg font-bold text-orange-600">
@@ -139,13 +157,13 @@ export const Shop = ({ points, onPurchase }: ShopProps) => {
                     size="sm"
                     className={
                       isPurchased 
-                        ? 'bg-green-500 hover:bg-green-500' 
+                        ? 'bg-green-500 hover:bg-green-500 cursor-default' 
                         : canAfford 
                           ? 'bg-orange-500 hover:bg-orange-600' 
-                          : ''
+                          : 'opacity-50 cursor-not-allowed'
                     }
                   >
-                    {isPurchased ? 'Owned' : canAfford ? 'Buy' : 'Too Expensive'}
+                    {isPurchased ? '✓ Owned' : canAfford ? 'Buy Now' : 'Too Expensive'}
                   </Button>
                 </div>
               </CardContent>
@@ -153,6 +171,29 @@ export const Shop = ({ points, onPurchase }: ShopProps) => {
           );
         })}
       </div>
+
+      {purchasedItems.length > 0 && (
+        <Card className="bg-green-50 border-green-200">
+          <CardHeader>
+            <CardTitle className="text-green-700 flex items-center gap-2">
+              <Trophy className="w-5 h-5" />
+              Your Purchases ({purchasedItems.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {purchasedItems.map(itemId => {
+                const item = shopItems.find(i => i.id === itemId);
+                return item ? (
+                  <Badge key={itemId} className="bg-green-500 text-white">
+                    {item.name}
+                  </Badge>
+                ) : null;
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
