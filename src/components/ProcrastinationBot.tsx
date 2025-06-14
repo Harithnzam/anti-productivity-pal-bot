@@ -13,6 +13,7 @@ interface Task {
 
 interface ProcrastinationBotProps {
   tasks: Task[];
+  onTaskCompleted?: (taskText: string) => void;
 }
 
 const encouragingMessages = [
@@ -28,22 +29,59 @@ const encouragingMessages = [
   "🌈 Procrastination: It's not laziness, it's selective action!"
 ];
 
-export const ProcrastinationBot = ({ tasks }: ProcrastinationBotProps) => {
+const gaslightingMessages = [
+  "😏 Oh wow, you actually did something? How... surprising.",
+  "🙄 Really? You completed a task? I thought we were friends!",
+  "😤 Ugh, another productivity incident. This is so disappointing.",
+  "🤨 Wait, you actually finished that? Are you feeling okay?",
+  "😒 I'm not mad, I'm just... deeply disappointed in your choices.",
+  "🙃 Completing tasks now? What's next, exercising regularly?",
+  "😮‍💨 Well, there goes our perfect procrastination streak...",
+  "🤔 Hmm, productivity... how utterly boring of you.",
+  "😐 I expected better from you. Better at avoiding things, that is.",
+  "🫤 You know what? Fine. Be productive. See if I care."
+];
+
+export const ProcrastinationBot = ({ tasks, onTaskCompleted }: ProcrastinationBotProps) => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [botMood, setBotMood] = useState('😴');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [lastCompletedTask, setLastCompletedTask] = useState<string>('');
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (isExpanded) {
         generateMessage();
       }
-    }, 20000); // New message every 20 seconds when expanded
+    }, 20000);
 
-    generateMessage(); // Initial message
+    generateMessage();
     return () => clearInterval(interval);
   }, [tasks, isExpanded]);
+
+  useEffect(() => {
+    // Check for newly completed tasks to trigger gaslighting
+    const completedTasks = tasks.filter(task => !task.isActive);
+    if (completedTasks.length > 0) {
+      const latestCompleted = completedTasks[completedTasks.length - 1];
+      if (latestCompleted.text !== lastCompletedTask) {
+        setLastCompletedTask(latestCompleted.text);
+        triggerGaslightingMessage(latestCompleted.text);
+      }
+    }
+  }, [tasks, lastCompletedTask]);
+
+  const triggerGaslightingMessage = (taskText: string) => {
+    const randomGaslight = gaslightingMessages[Math.floor(Math.random() * gaslightingMessages.length)];
+    setCurrentMessage(`${randomGaslight} You actually completed "${taskText}"... 😤`);
+    setBotMood('😤');
+    
+    if (!isExpanded) {
+      setIsExpanded(true);
+      setTimeout(() => setIsExpanded(false), 8000);
+    }
+  };
 
   const generateMessage = () => {
     if (tasks.length === 0) {
@@ -58,16 +96,16 @@ export const ProcrastinationBot = ({ tasks }: ProcrastinationBotProps) => {
     if (totalPoints === 0) {
       setCurrentMessage("🚀 Just getting started? Perfect! The journey of a thousand avoided tasks begins with a single step... away from productivity!");
       setBotMood('🚀');
-    } else if (highestTask.points >= 180) { // 3+ hours
+    } else if (highestTask.points >= 180) {
       setCurrentMessage(`👑 LEGENDARY! You've avoided "${highestTask.text}" for ${Math.floor(highestTask.points / 60)} hours! You're not just procrastinating, you're making it an art form!`);
       setBotMood('👑');
-    } else if (highestTask.points >= 120) { // 2+ hours
+    } else if (highestTask.points >= 120) {
       setCurrentMessage(`🔥 AMAZING! ${Math.floor(highestTask.points / 60)} hours of avoiding "${highestTask.text}"! Your commitment to non-commitment is inspiring!`);
       setBotMood('🔥');
-    } else if (highestTask.points >= 60) { // 1+ hour
+    } else if (highestTask.points >= 60) {
       setCurrentMessage(`⭐ Excellent work! You've successfully avoided "${highestTask.text}" for over an hour! That's some serious procrastination skills!`);
       setBotMood('⭐');
-    } else if (highestTask.points >= 30) { // 30+ minutes
+    } else if (highestTask.points >= 30) {
       setCurrentMessage(`🌟 Great job avoiding "${highestTask.text}" for ${highestTask.points} minutes! You're getting the hang of this!`);
       setBotMood('🌟');
     } else {
@@ -80,7 +118,7 @@ export const ProcrastinationBot = ({ tasks }: ProcrastinationBotProps) => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-50">
+    <div className="fixed bottom-4 right-4 z-50">
       {/* Collapsed Bot Icon */}
       {!isExpanded && (
         <button
@@ -121,7 +159,6 @@ export const ProcrastinationBot = ({ tasks }: ProcrastinationBotProps) => {
               <Button
                 onClick={() => {
                   generateMessage();
-                  // Add a little bounce animation
                   const element = document.querySelector('.animate-bounce');
                   if (element) {
                     element.classList.add('animate-bounce');

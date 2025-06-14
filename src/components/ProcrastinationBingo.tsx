@@ -10,7 +10,9 @@ interface BingoCard {
   id: string;
   task: string;
   avoided: boolean;
-  day: string;
+  date: number;
+  month: number;
+  year: number;
 }
 
 interface Task {
@@ -27,26 +29,32 @@ export const ProcrastinationBingo = ({ tasks }: ProcrastinationBingoProps) => {
   const [bingoCard, setBingoCard] = useState<BingoCard[]>([]);
   const [completedLines, setCompletedLines] = useState<number[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
 
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  
   useEffect(() => {
     generateBingoCard();
-  }, [tasks]);
+  }, [tasks, currentWeekStart]);
 
   const generateBingoCard = () => {
     const activeTasks = tasks.filter(task => task.isActive);
     if (activeTasks.length === 0) return;
 
     const newCard: BingoCard[] = [];
+    const startDate = new Date(currentWeekStart);
+    
+    // Generate 25 consecutive days starting from the current week
     for (let i = 0; i < 25; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+      
       const randomTask = activeTasks[Math.floor(Math.random() * activeTasks.length)];
-      const dayIndex = Math.floor(i / 5);
       newCard.push({
         id: `${i}`,
         task: randomTask.text,
-        avoided: Math.random() > 0.7, // Some randomly avoided for demo
-        day: days[dayIndex % 7]
+        avoided: Math.random() > 0.8, // Some randomly avoided for demo
+        date: currentDate.getDate(),
+        month: currentDate.getMonth() + 1,
+        year: currentDate.getFullYear()
       });
     }
     setBingoCard(newCard);
@@ -92,6 +100,23 @@ export const ProcrastinationBingo = ({ tasks }: ProcrastinationBingoProps) => {
     setCompletedLines(newCompletedLines);
   };
 
+  const changeWeek = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentWeekStart);
+    if (direction === 'prev') {
+      newDate.setDate(newDate.getDate() - 7);
+    } else {
+      newDate.setDate(newDate.getDate() + 7);
+    }
+    setCurrentWeekStart(newDate);
+  };
+
+  const formatDateHeader = () => {
+    const endDate = new Date(currentWeekStart);
+    endDate.setDate(endDate.getDate() + 24);
+    
+    return `${currentWeekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  };
+
   return (
     <Card className="bg-gradient-to-br from-emerald-50 to-teal-100 border-2 border-emerald-200 relative overflow-hidden">
       {showConfetti && (
@@ -107,7 +132,7 @@ export const ProcrastinationBingo = ({ tasks }: ProcrastinationBingoProps) => {
       <CardHeader className="pb-4">
         <CardTitle className="text-emerald-800 flex items-center gap-2 text-xl">
           <Calendar className="w-6 h-6" />
-          Procrastination Bingo
+          Procrastination Calendar Bingo
           {completedLines.length > 0 && (
             <Badge className="bg-yellow-500 text-yellow-900 ml-2">
               <Trophy className="w-4 h-4 mr-1" />
@@ -115,13 +140,24 @@ export const ProcrastinationBingo = ({ tasks }: ProcrastinationBingoProps) => {
             </Badge>
           )}
         </CardTitle>
+        <div className="flex items-center justify-between">
+          <Button onClick={() => changeWeek('prev')} variant="outline" size="sm">
+            ← Previous
+          </Button>
+          <div className="text-sm font-medium text-emerald-700">
+            {formatDateHeader()}
+          </div>
+          <Button onClick={() => changeWeek('next')} variant="outline" size="sm">
+            Next →
+          </Button>
+        </div>
       </CardHeader>
       
       <CardContent className="space-y-4">
         {bingoCard.length === 0 ? (
           <div className="text-center py-8 text-emerald-700">
             <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>Add some tasks to generate your Procrastination Bingo card!</p>
+            <p>Add some tasks to generate your Procrastination Calendar!</p>
           </div>
         ) : (
           <>
@@ -139,9 +175,11 @@ export const ProcrastinationBingo = ({ tasks }: ProcrastinationBingoProps) => {
                   `}
                   title={cell.task}
                 >
-                  <div className="text-[10px] opacity-60 mb-1">{cell.day}</div>
+                  <div className="text-[10px] font-bold mb-1">
+                    {cell.month}/{cell.date}
+                  </div>
                   <div className="truncate leading-tight">
-                    {cell.task.length > 12 ? cell.task.substring(0, 12) + '...' : cell.task}
+                    {cell.task.length > 8 ? cell.task.substring(0, 8) + '...' : cell.task}
                   </div>
                   {cell.avoided && (
                     <div className="text-lg mt-1">✓</div>
