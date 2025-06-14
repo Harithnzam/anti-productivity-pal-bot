@@ -35,17 +35,20 @@ const Index = () => {
       updateAvoidanceTime();
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [tasks]);
 
   const updateAvoidanceTime = () => {
     setTasks(prev => {
       let pointsGained = 0;
       
       const updatedTasks = prev.map(task => {
-        if (task.isActive) {
+        if (task.isActive && task.lastAvoidedAt) {
           const now = new Date();
-          const timeDiff = Math.floor((now.getTime() - new Date(task.lastAvoidedAt).getTime()) / 1000);
+          const lastAvoidedTime = new Date(task.lastAvoidedAt);
+          const timeDiff = Math.floor((now.getTime() - lastAvoidedTime.getTime()) / 1000);
           const newPoints = Math.floor(timeDiff / 60); // 1 point per minute
+          
+          console.log(`Task: ${task.text}, Time diff: ${timeDiff}s, New points: ${newPoints}, Old points: ${task.points}`);
           
           if (newPoints > task.points && newPoints % 5 === 0 && newPoints > 0) {
             toast({
@@ -66,7 +69,12 @@ const Index = () => {
       });
 
       if (pointsGained > 0) {
-        setTotalPoints(prev => prev + pointsGained);
+        console.log('Adding points:', pointsGained);
+        setTotalPoints(prev => {
+          const newTotal = prev + pointsGained;
+          console.log('New total points:', newTotal);
+          return newTotal;
+        });
       }
 
       return updatedTasks;
@@ -92,7 +100,13 @@ const Index = () => {
       estimatedDuration: duration
     };
     
-    setTasks(prev => [...prev, newTaskObj]);
+    console.log('Creating new task:', newTaskObj);
+    
+    setTasks(prev => {
+      const newTasks = [...prev, newTaskObj];
+      console.log('Updated tasks array:', newTasks);
+      return newTasks;
+    });
     
     toast({
       title: "🎯 New Avoidance Mission!",

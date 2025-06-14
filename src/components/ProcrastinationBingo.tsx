@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Calendar, Trophy, RotateCcw, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -22,6 +22,13 @@ interface Task {
   id: string;
   text: string;
   isActive: boolean;
+  createdAt: Date;
+  lastAvoidedAt: Date;
+  totalAvoidanceTime: number;
+  points: number;
+  startTime?: Date;
+  endTime?: Date;
+  estimatedDuration?: number;
 }
 
 interface ProcrastinationBingoProps {
@@ -64,7 +71,7 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
       newCard.push({
         id: `${i}`,
         task: taskText,
-        avoided: false, // Start with all unchecked
+        avoided: false,
         date: currentDate.getDate(),
         month: currentDate.getMonth() + 1,
         year: currentDate.getFullYear(),
@@ -72,7 +79,7 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
       });
     }
     setBingoCard(newCard);
-    checkForBingo(newCard);
+    setCompletedLines([]);
   };
 
   const toggleAvoidance = (id: string) => {
@@ -103,7 +110,8 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
   const handleAddCustomTask = () => {
     if (!selectedCell || !newTaskText.trim()) return;
     
-    // Add to main task list
+    // Add to main task list - this should trigger points
+    console.log('Adding task to main list:', newTaskText, taskDuration);
     onAddTask(newTaskText, taskDuration);
     
     // Update bingo card
@@ -243,6 +251,9 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Customize Task for {cell.month}/{cell.date}</DialogTitle>
+                  <DialogDescription>
+                    Add a custom task to avoid and start earning points!
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
