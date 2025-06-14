@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,6 +43,15 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [newTaskText, setNewTaskText] = useState('');
   const [taskDuration, setTaskDuration] = useState(30);
+  const [addTaskMessageIndex, setAddTaskMessageIndex] = useState(0);
+
+  const addTaskMessages = [
+    "📝 Task Added! Welcome to the procrastination paradise!",
+    "🎯 New Mission: Successfully avoid this task for maximum points!",
+    "🎪 Another star joins the circus of avoidance! Bravo!",
+    "🏆 Task registered in the Hall of Things To Ignore!",
+    "🎭 The drama begins! Will you conquer this task or will it conquer you?"
+  ];
 
   useEffect(() => {
     generateBingoCard();
@@ -126,8 +134,12 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
     setNewTaskText('');
     setTaskDuration(30);
     
+    // Cycle through different "Add Task" messages
+    const currentMessage = addTaskMessages[addTaskMessageIndex];
+    setAddTaskMessageIndex((addTaskMessageIndex + 1) % addTaskMessages.length);
+    
     toast({
-      title: "📝 Task Added!",
+      title: currentMessage.split('!')[0] + '!',
       description: `"${newTaskText}" added to both bingo and main list!`,
       duration: 3000,
     });

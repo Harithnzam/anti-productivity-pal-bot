@@ -62,6 +62,15 @@ export const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
     return () => clearInterval(interval);
   }, [task.isActive, task.lastAvoidedAt, task.estimatedDuration]);
 
+  const getTaskEmotion = () => {
+    const minutes = task.points;
+    if (minutes >= 180) return '💀'; // Dead from neglect
+    if (minutes >= 120) return '😢'; // Crying
+    if (minutes >= 60) return '😟';  // Worried
+    if (minutes >= 30) return '😐';  // Neutral/concerned
+    return '😊'; // Happy/fresh
+  };
+
   const getAvoidanceLevel = () => {
     const minutes = task.points;
     if (minutes >= 120) return { level: 'Master Procrastinator', color: 'bg-purple-500', emoji: '👑' };
@@ -76,6 +85,7 @@ export const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
   };
 
   const avoidanceLevel = getAvoidanceLevel();
+  const taskEmotion = getTaskEmotion();
 
   return (
     <Card className={`transition-all duration-300 ${
@@ -87,6 +97,7 @@ export const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
+                <span className="text-2xl">{taskEmotion}</span>
                 <span className={`font-medium ${
                   task.isActive ? 'text-red-800' : 'text-gray-600 line-through'
                 }`}>
@@ -98,6 +109,16 @@ export const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
                   </Badge>
                 )}
               </div>
+              {/* Task emotional message */}
+              {task.isActive && (
+                <div className="text-xs text-gray-500 italic">
+                  {task.points >= 180 && "I've given up on life... 💀"}
+                  {task.points >= 120 && task.points < 180 && "Why do you keep ignoring me? 😢"}
+                  {task.points >= 60 && task.points < 120 && "I'm getting worried about being forgotten... 😟"}
+                  {task.points >= 30 && task.points < 60 && "Starting to feel a bit neglected... 😐"}
+                  {task.points < 30 && "Fresh and ready to be avoided! 😊"}
+                </div>
+              )}
             </div>
             
             <div className="flex items-center gap-2">

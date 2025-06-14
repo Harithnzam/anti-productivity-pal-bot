@@ -42,40 +42,72 @@ const gaslightingMessages = [
   "🫤 You know what? Fine. Be productive. See if I care."
 ];
 
+const falseEncouragementMessages = [
+  "😏 Oh, you want to be productive? How... predictable. I guess some people just can't handle the art of procrastination.",
+  "🙄 Sure, go ahead and be 'responsible.' We'll see how long that lasts.",
+  "😤 Productivity? Really? That's so mainstream. I thought you had better taste.",
+  "🤷‍♀️ If you want to join the ranks of boring productive people, be my guest.",
+  "😮‍💨 I suppose not everyone can appreciate the sophisticated art of doing nothing."
+];
+
+const peerPressureMessages = [
+  "🍿 Everyone else is binge-watching shows right now, but sure, go ahead and be 'responsible'",
+  "🎮 Your friends are probably playing games while you're here trying to be productive. How fun for them.",
+  "☕ Normal people are enjoying their coffee break, but hey, you do you.",
+  "📱 Social media is happening without you while you're being all... efficient.",
+  "🛋️ There are perfectly good sofas everywhere just waiting to be sat on, but no..."
+];
+
+const taskRelationshipMessages = [
+  "💔 Where did my friend '{taskName}' go? The other tasks are asking questions...",
+  "😢 '{taskName}' left us. The remaining tasks are having a support group meeting.",
+  "🥺 Poor '{taskName}' - it really thought it would be avoided forever. So naive.",
+  "😭 The task '{taskName}' has been completed. May it rest in productivity peace.",
+  "💸 We lost a good one today. '{taskName}' was a champion at being ignored."
+];
+
 export const ProcrastinationBot = ({ tasks, onTaskCompleted }: ProcrastinationBotProps) => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [botMood, setBotMood] = useState('😴');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastCompletedTask, setLastCompletedTask] = useState<string>('');
+  const [previousTaskCount, setPreviousTaskCount] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (isExpanded) {
         generateMessage();
       }
-    }, 20000);
+    }, 25000);
 
     generateMessage();
     return () => clearInterval(interval);
   }, [tasks, isExpanded]);
 
   useEffect(() => {
-    // Check for newly completed tasks to trigger gaslighting
+    // Check for newly completed tasks
+    const activeTasks = tasks.filter(task => task.isActive);
     const completedTasks = tasks.filter(task => !task.isActive);
-    if (completedTasks.length > 0) {
+    
+    // Task relationship messages when tasks are completed
+    if (activeTasks.length < previousTaskCount && completedTasks.length > 0) {
       const latestCompleted = completedTasks[completedTasks.length - 1];
       if (latestCompleted.text !== lastCompletedTask) {
         setLastCompletedTask(latestCompleted.text);
-        triggerGaslightingMessage(latestCompleted.text);
+        triggerTaskRelationshipMessage(latestCompleted.text);
       }
     }
-  }, [tasks, lastCompletedTask]);
+    
+    setPreviousTaskCount(activeTasks.length);
+  }, [tasks, lastCompletedTask, previousTaskCount]);
 
-  const triggerGaslightingMessage = (taskText: string) => {
-    const randomGaslight = gaslightingMessages[Math.floor(Math.random() * gaslightingMessages.length)];
-    setCurrentMessage(`${randomGaslight} You actually completed "${taskText}"... 😤`);
-    setBotMood('😤');
+  const triggerTaskRelationshipMessage = (taskText: string) => {
+    const randomRelationship = taskRelationshipMessages[Math.floor(Math.random() * taskRelationshipMessages.length)];
+    const personalizedMessage = randomRelationship.replace('{taskName}', taskText);
+    
+    setCurrentMessage(personalizedMessage);
+    setBotMood('💔');
     
     if (!isExpanded) {
       setIsExpanded(true);
@@ -90,22 +122,36 @@ export const ProcrastinationBot = ({ tasks, onTaskCompleted }: ProcrastinationBo
       return;
     }
 
-    const totalPoints = tasks.reduce((sum, task) => sum + task.points, 0);
-    const highestTask = tasks.reduce((max, task) => task.points > max.points ? task : max, tasks[0]);
+    const activeTasks = tasks.filter(task => task.isActive);
+    const totalPoints = activeTasks.reduce((sum, task) => sum + task.points, 0);
+    const highestTask = activeTasks.length > 0 ? activeTasks.reduce((max, task) => task.points > max.points ? task : max, activeTasks[0]) : null;
 
-    if (totalPoints === 0) {
+    // Mix in false encouragement and peer pressure randomly
+    const messageType = Math.random();
+    
+    if (messageType < 0.2) {
+      // False encouragement (20% chance)
+      const randomFalseMessage = falseEncouragementMessages[Math.floor(Math.random() * falseEncouragementMessages.length)];
+      setCurrentMessage(randomFalseMessage);
+      setBotMood('😏');
+    } else if (messageType < 0.4) {
+      // Peer pressure (20% chance)
+      const randomPeerMessage = peerPressureMessages[Math.floor(Math.random() * peerPressureMessages.length)];
+      setCurrentMessage(randomPeerMessage);
+      setBotMood('🤷‍♀️');
+    } else if (totalPoints === 0) {
       setCurrentMessage("🚀 Just getting started? Perfect! The journey of a thousand avoided tasks begins with a single step... away from productivity!");
       setBotMood('🚀');
-    } else if (highestTask.points >= 180) {
+    } else if (highestTask && highestTask.points >= 180) {
       setCurrentMessage(`👑 LEGENDARY! You've avoided "${highestTask.text}" for ${Math.floor(highestTask.points / 60)} hours! You're not just procrastinating, you're making it an art form!`);
       setBotMood('👑');
-    } else if (highestTask.points >= 120) {
+    } else if (highestTask && highestTask.points >= 120) {
       setCurrentMessage(`🔥 AMAZING! ${Math.floor(highestTask.points / 60)} hours of avoiding "${highestTask.text}"! Your commitment to non-commitment is inspiring!`);
       setBotMood('🔥');
-    } else if (highestTask.points >= 60) {
+    } else if (highestTask && highestTask.points >= 60) {
       setCurrentMessage(`⭐ Excellent work! You've successfully avoided "${highestTask.text}" for over an hour! That's some serious procrastination skills!`);
       setBotMood('⭐');
-    } else if (highestTask.points >= 30) {
+    } else if (highestTask && highestTask.points >= 30) {
       setCurrentMessage(`🌟 Great job avoiding "${highestTask.text}" for ${highestTask.points} minutes! You're getting the hang of this!`);
       setBotMood('🌟');
     } else {
