@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,35 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
   useEffect(() => {
     generateBingoCard();
   }, [currentWeekStart]);
+
+  // Sync bingo card with task completions
+  useEffect(() => {
+    setBingoCard(prev => prev.map(cell => {
+      // Check if this cell's task matches any completed task
+      const matchingTask = tasks.find(task => 
+        task.text.toLowerCase() === cell.task.toLowerCase() && 
+        !task.isActive
+      );
+      
+      if (matchingTask && !cell.avoided) {
+        // Mark as avoided if task is completed
+        return { ...cell, avoided: true };
+      }
+      
+      // Check if task was reactivated
+      const activeTask = tasks.find(task => 
+        task.text.toLowerCase() === cell.task.toLowerCase() && 
+        task.isActive
+      );
+      
+      if (activeTask && cell.avoided && cell.hasCustomTask) {
+        // Unmark if task was reactivated
+        return { ...cell, avoided: false };
+      }
+      
+      return cell;
+    }));
+  }, [tasks]);
 
   const generateBingoCard = () => {
     const newCard: BingoCard[] = [];
