@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar, Trophy, Sparkles, RotateCcw, Plus } from 'lucide-react';
+import { Calendar, Trophy, RotateCcw, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface BingoCard {
@@ -39,7 +40,7 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
 
   useEffect(() => {
     generateBingoCard();
-  }, [tasks, currentWeekStart]);
+  }, [currentWeekStart]);
 
   const generateBingoCard = () => {
     const newCard: BingoCard[] = [];
@@ -57,15 +58,13 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
       
-      // Use different tasks or random selection
-      const taskText = tasks.length > 0 
-        ? tasks[i % tasks.length]?.text || taskTexts[i % taskTexts.length]
-        : taskTexts[i % taskTexts.length];
+      // Use different tasks based on index to avoid repetition
+      const taskText = taskTexts[i % taskTexts.length];
       
       newCard.push({
         id: `${i}`,
         task: taskText,
-        avoided: Math.random() > 0.9, // Less randomly avoided
+        avoided: false, // Start with all unchecked
         date: currentDate.getDate(),
         month: currentDate.getMonth() + 1,
         year: currentDate.getFullYear(),
@@ -82,6 +81,15 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
     );
     setBingoCard(newCard);
     checkForBingo(newCard);
+    
+    const cell = newCard.find(c => c.id === id);
+    if (cell?.avoided) {
+      toast({
+        title: "✅ Task Avoided!",
+        description: `Great job avoiding "${cell.task}"!`,
+        duration: 2000,
+      });
+    }
   };
 
   const handleCellClick = (id: string) => {
@@ -289,7 +297,7 @@ export const ProcrastinationBingo = ({ tasks, onAddTask }: ProcrastinationBingoP
         </div>
         
         <div className="text-center text-xs text-emerald-600">
-          Click any box to customize task • Complete a row, column, or diagonal for BINGO! 🎯
+          Click any box to customize task or mark as avoided • Complete a row, column, or diagonal for BINGO! 🎯
         </div>
       </CardContent>
     </Card>
