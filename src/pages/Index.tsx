@@ -30,6 +30,7 @@ const Index = () => {
   const [tasks, setTasks] = useLocalStorage<Task[]>('todont-tasks', []);
   const [totalPoints, setTotalPoints] = useLocalStorage<number>('todont-points', 0);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [bingoCardRef, setBingoCardRef] = useState(0); // Force bingo card refresh
   const [confirmationDialog, setConfirmationDialog] = useState<{
     isOpen: boolean;
     taskName: string;
@@ -130,6 +131,9 @@ const Index = () => {
       return newTasks;
     });
     
+    // Force bingo card to refresh
+    setBingoCardRef(prev => prev + 1);
+    
     // Play sound with 2 second delay
     setTimeout(() => {
       playSound('taskAdded');
@@ -153,6 +157,9 @@ const Index = () => {
           
           setTotalPoints(prev => prev + pointsGained);
           
+          // Force bingo card to refresh when task is completed
+          setBingoCardRef(prev => prev + 1);
+          
           // Play sound with 2 second delay
           setTimeout(() => {
             playSound('taskDone');
@@ -165,6 +172,9 @@ const Index = () => {
           });
           return { ...task, isActive: false, endTime: new Date() };
         } else {
+          // Force bingo card to refresh when task is reactivated
+          setBingoCardRef(prev => prev + 1);
+          
           toast({
             title: "🔄 Back to Avoiding!",
             description: `Welcome back to avoiding "${task.text}"!`,
@@ -178,6 +188,8 @@ const Index = () => {
 
   const deleteTask = (id: string) => {
     setTasks(prev => prev.filter(task => task.id !== id));
+    // Force bingo card to refresh when task is deleted
+    setBingoCardRef(prev => prev + 1);
     toast({
       title: "🗑️ Mission Abandoned",
       description: "Task removed from your avoidance list!",
@@ -273,7 +285,11 @@ const Index = () => {
         <div className="grid lg:grid-cols-12 gap-6">
           {/* Left Column - Bingo and Games */}
           <div className="lg:col-span-7 space-y-6">
-            <ProcrastinationBingo tasks={activeTasks} onAddTask={addTask} />
+            <ProcrastinationBingo 
+              key={bingoCardRef} 
+              tasks={activeTasks} 
+              onAddTask={addTask} 
+            />
             <ExcuseGenerator />
           </div>
 

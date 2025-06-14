@@ -96,7 +96,7 @@ export const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <span className="text-2xl">{taskEmotion}</span>
                 <span className={`font-medium ${
                   task.isActive ? 'text-red-800' : 'text-gray-600 line-through'
@@ -104,7 +104,7 @@ export const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
                   {task.text}
                 </span>
                 {task.isActive && (
-                  <Badge className={`${avoidanceLevel.color} text-white px-2 py-1 text-xs`}>
+                  <Badge className={`${avoidanceLevel.color} text-white px-2 py-1 text-xs whitespace-nowrap`}>
                     {avoidanceLevel.emoji} {avoidanceLevel.level}
                   </Badge>
                 )}
